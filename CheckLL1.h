@@ -17,12 +17,14 @@
 
 #include<deque>
 #include<map>
+#include<set>
 
 class CheckLL1class {
 public:
 	CheckLL1class();																//构造函数
 	~CheckLL1class() {};
 
+	void buildAnalyseSheet(std::string input);
 	int DoCheck();
 	void BindInputHWND(HWND Input_RichTextDialogclass);
 	void BindVIWHWND(HWND VIW_RichTextDialogclass);
@@ -37,7 +39,9 @@ private:
 	TCHAR* toTCHAR(std::string input);
 	TCHAR* toTCHAR(int input);
 	std::string findWholeString(char input);
-
+	void getFIRSTsets();
+	void getFOLLOWsets();
+	bool replaceStacktop(char arg1, char arg2);
 	void mixoutput();
 
 	//RichTextDialogclass Output_Bind_RichTextDialogclass;
@@ -46,35 +50,34 @@ private:
 	RichTextDialogclass Input_Bind_RichTextDialogclass;							//输入文本框类的引用
 	int					nIndex;													//输出列表框单元索引 迭代变量
 
-	int Analysestep;
-	TCHAR output[MAXLEN] = { 0 };
-	std::string stringoutput;
-	TCHAR newline[10] = TEXT("\r\n");											//换行TCHAR*字符串
+	int					Analysestep;
+	TCHAR				output[MAXLEN] = { 0 };
+	std::string			stringoutput;
+	TCHAR				newline[10] = TEXT("\r\n");								//换行TCHAR*字符串
 
-	TCHAR stackoutput[MAXLEN] = { 0 };														//单词临时变量
-	TCHAR restoutput[MAXLEN] = { 0 };													//单词属性临时变量
-	TCHAR GrammarFormulaoutput[MAXLEN] = { 0 };													//单词类型临时变量
-	TCHAR actionoutput[MAXLEN] = { 0 };													//单词行列临时变量
+	TCHAR				stackoutput[MAXLEN] = { 0 };							//单词临时变量
+	TCHAR				restoutput[MAXLEN] = { 0 };								//单词属性临时变量
+	TCHAR				GrammarFormulaoutput[MAXLEN] = { 0 };					//单词类型临时变量
+	TCHAR				actionoutput[MAXLEN] = { 0 };							//单词行列临时变量
 
+	TCHAR				tcharrow[3] = { 0 };									//行临时变量
+	TCHAR				tcharcol[3] = { 0 };									//列临时变量
 
-	TCHAR tcharrow[3] = { 0 };													//行临时变量
-	TCHAR tcharcol[3] = { 0 };													//列临时变量
+	TCHAR				nulldivision[6];
+	TCHAR				equaldivision[6];
 
-	TCHAR nulldivision[6];
-	TCHAR equaldivision[6];
+	char				str2[MAXLEN];
 
-	std::string Grammaroutput;													//replaceStacktop 输出语法
-	std::string Grammarrightsentence;											//replaceStacktop 输出右部	
+	long				totalLength;
+	long				iterator_pointer;
 
-	std::deque<char> AnalyseStack;
-	bool replaceStacktop(char arg1, char arg2);
+	std::string			Grammaroutput;											//replaceStacktop 输出语法
+	std::string			Grammarrightsentence;									//replaceStacktop 输出右部	
 
+	std::deque<char>	AnalyseStack;
 	std::map<char, std::map<char, std::string>> AnalyseSheet;
+	std::multimap<std::string, std::string> GrammarFormula;
 
-	std::map<std::string, std::string> GrammarFormula;
-
-	char str2[MAXLEN];
-
-	long totalLength;
-	long iterator_pointer;
+	std::map<char, std::set<char>> FIRSTset;
+	std::map<char, std::set<char>> FOLLOWset;
 };

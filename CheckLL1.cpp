@@ -13,6 +13,8 @@
 
 #include "CheckLL1.h"
 
+#define NULLCHARACTER '$'
+
 #define getStackTop *(AnalyseStack.rbegin())
 #define getStringTop Input_Bind_RichTextDialogclass.tmpoutputCHAR[0]
 
@@ -20,31 +22,31 @@
 #define pushStack(i) AnalyseStack.push_back(i)
 
 CheckLL1class::CheckLL1class() {
-	AnalyseSheet['E']['i'] = "TG";	//转换表
-	AnalyseSheet['E']['('] = "TG";
-	AnalyseSheet['G']['+'] = "+TG";
-	AnalyseSheet['G']['-'] = "-TG";
-	AnalyseSheet['G'][')'] = "";
-	AnalyseSheet['G']['#'] = "";
-	AnalyseSheet['T']['i'] = "FS";
-	AnalyseSheet['T']['('] = "FS";
-	AnalyseSheet['S']['+'] = "";
-	AnalyseSheet['S']['-'] = "";
-	AnalyseSheet['S']['*'] = "*FS";
-	AnalyseSheet['S']['/'] = "/FS";
-	AnalyseSheet['S'][')'] = "";
-	AnalyseSheet['S']['#'] = "";
-	AnalyseSheet['F']['i'] = "i";
-	AnalyseSheet['F']['('] = "(E)";
+	//AnalyseSheet['E']['i'] = "TG";	//转换表
+	//AnalyseSheet['E']['('] = "TG";
+	//AnalyseSheet['G']['+'] = "+TG";
+	//AnalyseSheet['G']['-'] = "-TG";
+	//AnalyseSheet['G'][')'] = "";
+	//AnalyseSheet['G']['#'] = "";
+	//AnalyseSheet['T']['i'] = "FS";
+	//AnalyseSheet['T']['('] = "FS";
+	//AnalyseSheet['S']['+'] = "";
+	//AnalyseSheet['S']['-'] = "";
+	//AnalyseSheet['S']['*'] = "*FS";
+	//AnalyseSheet['S']['/'] = "/FS";
+	//AnalyseSheet['S'][')'] = "";
+	//AnalyseSheet['S']['#'] = "";
+	//AnalyseSheet['F']['i'] = "i";
+	//AnalyseSheet['F']['('] = "(E)";
 
-	GrammarFormula["TG"]	= "E";
-	GrammarFormula["+TG"]	= "G";
-	GrammarFormula["-TG"]	= "G";
-	GrammarFormula["FS"]	= "T";
-	GrammarFormula["*FS"]	= "S";
-	GrammarFormula["/FS"]	= "S";
-	GrammarFormula["(E)"]	= "F";
-	GrammarFormula["i"]		= "F";
+	//GrammarFormula["TG"]	= "E";
+	//GrammarFormula["+TG"]	= "G";
+	//GrammarFormula["-TG"]	= "G";
+	//GrammarFormula["FS"]	= "T";
+	//GrammarFormula["*FS"]	= "S";
+	//GrammarFormula["/FS"]	= "S";
+	//GrammarFormula["(E)"]	= "F";
+	//GrammarFormula["i"]		= "F";
 
 	lstrcpy(equaldivision, TEXT(" → "));
 	lstrcpy(nulldivision, TEXT("ε"));
@@ -316,4 +318,222 @@ void CheckLL1class::BindOutputHWND(HWND Output_RichTextDialogclass)
 void CheckLL1class::BindVIWHWND(HWND viwhwnd) {
 	HWND tmp = viwhwnd;
 	VIW_Bind_RichTextDialogclass = tmp;
+}
+
+void CheckLL1class::getFIRSTsets() {
+	
+	
+
+	std::set<std::string> tmpunbuildsymbol,tmptotalbuildsymbol;
+	
+	for (auto i = GrammarFormula.begin(); i != GrammarFormula.end(); i++) {
+		tmpunbuildsymbol.insert(i->second);
+		tmptotalbuildsymbol.insert(i->second);
+	}
+	bool issolveable = false;
+	std::set<std::string>::iterator i,li;
+	while (tmpunbuildsymbol.empty() == false) {
+		for ( i = tmpunbuildsymbol.begin(); i != tmpunbuildsymbol.end(); i++) {
+			if (issolveable == true) {
+				tmpunbuildsymbol.erase(std::string{ li->at(0) });
+				if (tmpunbuildsymbol.empty() == true) {
+					break;
+				}
+			}
+			issolveable = true;
+			for (auto ii = GrammarFormula.begin(); ii != GrammarFormula.end(); ii++) {
+				if (ii->second.at(0) == i->at(0) && tmpunbuildsymbol.find(std::string{ ii->first.at(0) }) != tmpunbuildsymbol.end()) {
+					//shangweikejie
+					issolveable = false;
+				}
+				
+			}
+			if (issolveable == true) {
+				for (auto ii = GrammarFormula.begin(); ii != GrammarFormula.end(); ii++) {
+					if (ii->second.at(0) == i->at(0)) {
+						//shangweikejie
+						if (tmptotalbuildsymbol.find(std::string{ ii->first.at(0) }) != tmptotalbuildsymbol.end()) {
+							FIRSTset[i->at(0)].insert(FIRSTset[ii->first.at(0)].begin(), FIRSTset[ii->first.at(0)].end());
+						}
+						else {
+							FIRSTset[i->at(0)].insert(ii -> first.at(0));
+						}
+					}
+				}			
+			}
+			li = i;
+		}
+
+		
+	}
+}
+
+void CheckLL1class::getFOLLOWsets() {
+	
+
+	//FOLLOWset[GrammarFormula.begin()->second.at(0)].insert('#');
+
+	std::set<std::string> tmptotalbuildsymbol;
+
+	for (auto i = GrammarFormula.begin(); i != GrammarFormula.end(); i++) {
+		tmptotalbuildsymbol.insert(i->second);
+	}
+
+	std::map<char, std::map<char, bool>> FirstLinear, FollowLinear;			//First集约束条件, Follow集约束条件
+
+	for (auto i = GrammarFormula.begin(); i != GrammarFormula.end(); i++) {
+		auto theend = i->first.rend();
+		theend--;
+		for (auto t = i->first.rbegin(); t != theend; t++) {
+			if (tmptotalbuildsymbol.find(std::string{ *(t + 1) }) != tmptotalbuildsymbol.end()) {
+				if(tmptotalbuildsymbol.find(std::string{ *(t) }) != tmptotalbuildsymbol.end())
+					//FirstLinear[*t][*(t + 1)] = true;
+					FOLLOWset[*(t + 1)].insert(FIRSTset[*t].begin(), FIRSTset[*t].end());
+				else
+					FOLLOWset[*(t+1)].insert(*t);
+				FOLLOWset[*(t + 1)].erase(NULLCHARACTER);
+			}
+				
+				
+		}
+	}
+
+	for (auto i = GrammarFormula.begin(); i != GrammarFormula.end(); i++) {
+		for (auto t = i->first.rbegin(); t != i->first.rend(); t++) {
+			if (tmptotalbuildsymbol.find(std::string{ *t }) != tmptotalbuildsymbol.end() || *t ==NULLCHARACTER) {
+				if(*t != NULLCHARACTER && i->second.at(0) != *t)
+					FollowLinear[i->second.at(0)][*t] = true;
+				if (*t != NULLCHARACTER && FIRSTset[*t].find(NULLCHARACTER) == FIRSTset[*t].end()) {	//不包含空集
+					break;
+				}
+			}
+			else {
+				break;
+			}
+				
+		}
+	}
+
+	while (FollowLinear.size() > 0) {
+		for (auto i = tmptotalbuildsymbol.begin(); i != tmptotalbuildsymbol.end();) {
+			bool isOK = true;
+			for (auto ii = FollowLinear.begin(); ii != FollowLinear.end(); ii++) {
+				if (ii->second.find(i->at(0)) != ii->second.end()) {
+					isOK = false;
+				}
+			}
+
+			if (isOK == true) {
+				//for (auto ii = FirstLinear[i->at(0)].begin(); ii != FirstLinear[i->at(0)].end(); ii++) {
+				//		FOLLOWset[i->at(0)].insert(FIRSTset[ii->first].begin(), FIRSTset[ii->first].end());
+				//}
+
+				for (auto ii = FollowLinear[i->at(0)].begin(); ii != FollowLinear[i->at(0)].end(); ii++) {
+					FOLLOWset[ii->first].insert(FOLLOWset[i->at(0)].begin(), FOLLOWset[i->at(0)].end());
+				}
+
+				auto tmp = i;
+				i++;
+				FollowLinear.erase(tmp->at(0));
+
+			}
+			else {
+				i++;
+			}
+		}
+	}
+	
+}
+
+void CheckLL1class::buildAnalyseSheet(std::string input) {
+	std::string tmp = input;
+	FIRSTset.clear();
+	FOLLOWset.clear();
+	FOLLOWset[input.at(0)].insert('#');
+	std::string tmpheader, tmptail;
+	int flag = 1;	//flag==1 for tmpheader flag==2 for tmptail
+	for (auto i = tmp.begin(); i != tmp.end(); i++) {
+		if (*i == '\r' || *i == '\n' && flag==2) {
+			if(tmptail!="" && tmpheader!="")
+				GrammarFormula.insert(std::make_pair(tmptail, tmpheader));
+				//GrammarFormula[tmptail] = tmpheader;
+
+			tmpheader = "";
+			tmptail = "";
+			flag = 1;
+			i++;
+		}
+		else if(*i == '-' && *(i+1) == '>' && flag==1){
+			i++;
+			flag = 2;
+
+		}
+		else if (*i == '|' && flag == 2) {
+			//GrammarFormula[tmptail] = tmpheader;
+			GrammarFormula.insert(std::make_pair(tmptail, tmpheader));
+			tmptail = "";
+		}
+		else if (flag == 1) {
+			tmpheader += *i;
+		}else if(flag == 2) {
+			tmptail += *i;
+		}
+	}
+	if (tmptail != "" && tmpheader != "")
+		GrammarFormula.insert(std::make_pair(tmptail, tmpheader)); 
+		//GrammarFormula[tmptail] = tmpheader;
+
+	getFIRSTsets();
+	getFOLLOWsets();
+
+
+	for (auto i = FIRSTset.begin(); i != FIRSTset.end(); i++) {
+		for (auto ii = i->second.begin(); ii != i->second.end(); ii++) {
+			if (*ii != NULLCHARACTER) {
+				int sum = 0;
+				std::string possibleresult1="", possibleresult2="";
+				for (auto i_tmp = GrammarFormula.begin(); i_tmp != GrammarFormula.end(); i_tmp++) {
+					if (i_tmp->second.at(0) == i->first) {
+						sum++;
+						possibleresult1 = i_tmp->first;
+					}
+					if (i_tmp->second.at(0) == i->first && i_tmp->first.at(0) == *ii) {
+						possibleresult2 = i_tmp->first;
+					}
+				}
+				
+				if (possibleresult2 != "")
+					AnalyseSheet[i->first][*ii] = possibleresult2;
+				else if (sum != 0 && possibleresult1 != "") {
+					AnalyseSheet[i->first][*ii] = possibleresult1;
+				}
+				else {
+					MessageBox(NULL, NULL, NULL, NULL);
+				}
+			}			
+			else {
+				for (auto tmper = FOLLOWset[i->first].begin(); tmper != FOLLOWset[i->first].end(); tmper++) {
+					AnalyseSheet[i->first][*tmper] = "";
+				}
+				//int sum = 0;
+				//std::string possibleresult1 = "", possibleresult2 = "";
+				//for (auto i_tmp = GrammarFormula.begin(); i_tmp != GrammarFormula.end(); i_tmp++) {
+				//	if (i_tmp->second.at(0) == i->first) {
+				//		sum++;
+				//		possibleresult1 = "";
+				//	}
+				//	if (*i_tmp->first.rbegin() == *ii) {
+				//		possibleresult2 = "";
+				//	}
+				//}
+				
+				//AnalyseSheet[i->first][*ii] = "";
+
+			}
+				
+		}
+		
+	}
+
+	GrammarFormula.erase("$");
 }

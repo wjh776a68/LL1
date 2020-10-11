@@ -21,10 +21,8 @@
 #define MAX_LOADSTRING 100
 
 #define IDM_LISTBOX_OUTPUT 10685
-#define IDM_BUTTON_ADDKEYWORDS 10681
-#define IDM_BUTTON_ADDDIVISIONS 10682
-#define IDM_BUTTON_ADDARITHMETIC 10683
-#define IDM_BUTTON_ADDRELATION 10684
+#define IDM_BUTTON_SETGRAMMAR 10686
+
 #include "framework.h"
 #include "LL(1).h"
 
@@ -41,16 +39,14 @@ HWND                    main_RichTextBox_VAR;                      //富文本框
 HWND                    hwndList;                                   //下方输出表单
 HWND                    VIW_hwndList;
 
-HWND                    subwindows_AddVIW_hwnd;
+HWND                    subwindows_SETGRAMMER_hwnd;
 HWND                    SubWindows_TextBox,
-SubWindows_button_AddKeywords,
-SubWindows_button_AddDivisions,
-SubWindows_button_AddArithmetic,
-SubWindows_button_AddRelation;              //子窗口文本框、按钮框句柄
+SubWindows_button_SetGrammar;              //子窗口文本框、按钮框句柄
 
 FileDialogClass         FileDialogCore;
 RichTextDialogclass     RichTextDialog_main_core;
 RichTextDialogclass     RichTextDialog_output_core;
+
 FileIOFunctionsclass    FileIOFunctionsCore;
 CheckLL1class            CheckLL1Core;
 
@@ -265,7 +261,7 @@ int createwidgets(HWND hWnd) {
 void StartLL1Windows(HWND mainwindows_hWnd) {
     PWINDOWINFO tmp = (PWINDOWINFO)malloc(sizeof(WINDOWINFO));
     tmp->cbSize = sizeof(WINDOWINFO);
-    if (GetWindowInfo(hwndList, tmp) == true) {
+    if (GetWindowInfo(hwndList, tmp) == TRUE) {
         ShowWindow(hwndList, SW_SHOWNORMAL);
         UpdateWindow(hwndList);
         UpdateWindow(mainwindows_hWnd);
@@ -284,50 +280,30 @@ void StartLL1Windows(HWND mainwindows_hWnd) {
 *	输入:	mainwindows_hWnd    HWND	父窗口句柄
 *	返回值： void
 ***************************************************************/
-void SubWindows_AddVIW(HWND mainwindows_hWnd) {
-    subwindows_AddVIW_hwnd = CreateWindowExW(0, L"childwin32app", TEXT("添加关键词、分界符、算术运算符、关系运算符\n"),
+void SubWindows_SetGrammar(HWND mainwindows_hWnd) {
+    subwindows_SETGRAMMER_hwnd = CreateWindowExW(0, L"childwin32app", TEXT("设置文法\n"),
         WS_OVERLAPPED | WS_SYSMENU,
-        CW_USEDEFAULT, CW_USEDEFAULT, 420, 280,
+        CW_USEDEFAULT, CW_USEDEFAULT, 420, 350,
         mainwindows_hWnd, NULL, GetModuleHandle(NULL), NULL);
 
 
     SubWindows_TextBox = CreateWindowEx(0, MSFTEDIT_CLASS, TEXT(""),
         WS_VISIBLE | WS_CHILD |
         ES_MULTILINE | ES_LEFT | ES_NOHIDESEL | WS_BORDER/*| ES_READONLY*/,
-        20, 10, 360, 50,
-        subwindows_AddVIW_hwnd, NULL, GetModuleHandle(NULL), NULL);
+        20, 10, 360, 230,
+        subwindows_SETGRAMMER_hwnd, NULL, GetModuleHandle(NULL), NULL);
 
-    SubWindows_button_AddKeywords = CreateWindowEx(0, L"BUTTON", L"添加关键字",
+    
+
+    SubWindows_button_SetGrammar = CreateWindowEx(0, L"BUTTON", L"保存文法",
         WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | WS_TABSTOP |
         ES_NOHIDESEL /*| ES_READONLY*/,
-        20, 100, 360, 30,
-        subwindows_AddVIW_hwnd, (HMENU)IDM_BUTTON_ADDKEYWORDS, NULL/* GetModuleHandle(NULL)*/, NULL);
+        20, 260, 360, 30,
+        subwindows_SETGRAMMER_hwnd, (HMENU)IDM_BUTTON_SETGRAMMAR, NULL/* GetModuleHandle(NULL)*/, NULL);
 
-    SubWindows_button_AddDivisions = CreateWindowEx(0, L"BUTTON", L"添加分界符",
-        WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | WS_TABSTOP |
-        ES_NOHIDESEL /*| ES_READONLY*/,
-        20, 130, 360, 30,
-        subwindows_AddVIW_hwnd, (HMENU)IDM_BUTTON_ADDDIVISIONS, NULL/* GetModuleHandle(NULL)*/, NULL);
-
-    SubWindows_button_AddArithmetic = CreateWindowEx(0, L"BUTTON", L"添加算术运算符",
-        WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | WS_TABSTOP |
-        ES_NOHIDESEL /*| ES_READONLY*/,
-        20, 160, 360, 30,
-        subwindows_AddVIW_hwnd, (HMENU)IDM_BUTTON_ADDARITHMETIC, NULL/* GetModuleHandle(NULL)*/, NULL);
-
-    SubWindows_button_AddRelation = CreateWindowEx(0, L"BUTTON", L"添加关系运算符",
-        WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | WS_TABSTOP |
-        ES_NOHIDESEL /*| ES_READONLY*/,
-        20, 190, 360, 30,
-        subwindows_AddVIW_hwnd, (HMENU)IDM_BUTTON_ADDRELATION, NULL/* GetModuleHandle(NULL)*/, NULL);
-
-
-    ShowWindow(SubWindows_button_AddKeywords, SW_SHOW);
-    ShowWindow(SubWindows_button_AddDivisions, SW_SHOW);
-    ShowWindow(SubWindows_button_AddArithmetic, SW_SHOW);
-    ShowWindow(SubWindows_button_AddRelation, SW_SHOW);
-    ShowWindow(subwindows_AddVIW_hwnd, SW_SHOW);
-    UpdateWindow(subwindows_AddVIW_hwnd);
+    ShowWindow(SubWindows_button_SetGrammar, SW_SHOW);
+    ShowWindow(subwindows_SETGRAMMER_hwnd, SW_SHOW);
+    UpdateWindow(subwindows_SETGRAMMER_hwnd);
 
 }
 
@@ -357,17 +333,10 @@ LRESULT CALLBACK WndProc_SubWindows(HWND hWnd, UINT message, WPARAM wParam, LPAR
         std::string str(chRtn);
 
         switch (LOWORD(wParam)) {
-        case IDM_BUTTON_ADDKEYWORDS:
-           
-            break;
-        case IDM_BUTTON_ADDARITHMETIC:
-          
-            break;
-        case IDM_BUTTON_ADDDIVISIONS:
-          
-            break;
-        case IDM_BUTTON_ADDRELATION:
-           
+       
+        case IDM_BUTTON_SETGRAMMAR:
+            CheckLL1Core.buildAnalyseSheet(str);
+            
             break;
         }
 
@@ -404,11 +373,11 @@ void ChangeSizetoDefault(HWND hWnd) {
     GetClientRect(hWnd, rect);
 
     SetWindowPos(main_RichTextBox_VAR, HWND_BOTTOM, 0, 0, rect->right, int(rect->bottom * 0.6), SWP_NOMOVE | SWP_NOZORDER);
-    if (GetWindowInfo(hwndList, tmp) == true) {
+    if (GetWindowInfo(hwndList, tmp) == TRUE) {
 
         SetWindowPos(hwndList, HWND_TOP, 0, int(rect->bottom * 0.6) + 1, rect->right, rect->bottom - (int(rect->bottom * 0.6) + 1), SWP_NOZORDER);
     }
-    if (GetWindowInfo(VIW_hwndList, tmp) == true) {
+    if (GetWindowInfo(VIW_hwndList, tmp) == TRUE) {
         SetWindowPos(VIW_hwndList, HWND_TOP, 0, int(rect->bottom * 0.6) + 1, rect->right, rect->bottom - (int(rect->bottom * 0.6) + 1), SWP_NOZORDER);
     }
 
@@ -469,9 +438,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             RichTextDialog_main_core.RichTextDialog_ClearText();
             break;
 
-        //case ID_FILE_ADDVIW:            // Q: How to explain the abbreviation word VIW? A: Do you know what is VIP means?
-        //    SubWindows_AddVIW(hWnd);
-        //    break;
+        case ID_FILE_SETGRAMMAR:            // Q: How to explain the abbreviation word VIW? A: Do you know what is VIP means?
+            SubWindows_SetGrammar(hWnd);
+            break;
 
         case ID_FILE_LL1CHECK:
 
