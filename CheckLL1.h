@@ -7,7 +7,7 @@
 *								Author:				wjh776a68												*
 *  								Function:			Functions of LL1 Analyse, header code					*
 *	 							CreateTime:			2020/10/08												*
-* 								LastUpdateTime:		2020/10/09												*
+* 								LastUpdateTime:		2020/10/13												*
 * 																											*
 *************************************************************************************************************/
 
@@ -15,6 +15,7 @@
 
 #include "RichTextDialog.h"
 
+#include <atlstr.h>	//tchar to string
 #include<deque>
 #include<map>
 #include<set>
@@ -27,31 +28,43 @@ public:
 	void buildAnalyseSheet(std::string input);
 	int DoCheck();
 	void BindInputHWND(HWND Input_RichTextDialogclass);
-	void BindVIWHWND(HWND VIW_RichTextDialogclass);
+	void BindoutputFirstSetHWND(HWND Output_RichTextDialogclass);
+	void BindoutputFollowSetHWND(HWND Output_RichTextDialogclass);
+	void BindoutputStatusSheetHWND(HWND Output_RichTextDialogclass);
 	void BindOutputHWND(HWND Output_RichTextDialogclass);
 
-	void addVIWtoVIWWindows();
-
-	
-private:
-	void outputbystep(std::string formformula,std::string action);
+	void outputFirstSet();
+	void outputFollowSet();
+	void outputStatusSheet();
 
 	TCHAR* toTCHAR(std::string input);
 	TCHAR* toTCHAR(int input);
+
+	std::set<char> SymbolSet;		//终结符集合
+private:
+	void outputbystep(std::string formformula,std::string action);
+
+
 	std::string findWholeString(char input);
 	void getFIRSTsets();
 	void getFOLLOWsets();
+	void getStatusSheet();
+
 	bool replaceStacktop(char arg1, char arg2);
 	void mixoutput();
 
 	//RichTextDialogclass Output_Bind_RichTextDialogclass;
 	HWND				Output_Bind_RichTextDialogclass;						//输出列表框句柄
-	HWND				VIW_Bind_RichTextDialogclass;							//关键词列表框句柄
+	HWND				FirstSet_Bind_RichTextDialogclass;						//First集列表框句柄
+	HWND				FollowSet_Bind_RichTextDialogclass;						//Follow集列表框句柄
+	HWND				StatusSheet_Bind_RichTextDialogclass;					//状态转换图列表框句柄
 	RichTextDialogclass Input_Bind_RichTextDialogclass;							//输入文本框类的引用
 	int					nIndex;													//输出列表框单元索引 迭代变量
 
 	int					Analysestep;
 	TCHAR				output[MAXLEN] = { 0 };
+	TCHAR				tmptchar[MAXLEN] = { 0 };
+
 	std::string			stringoutput;
 	TCHAR				newline[10] = TEXT("\r\n");								//换行TCHAR*字符串
 

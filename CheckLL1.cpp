@@ -7,7 +7,7 @@
 *								Author:				wjh776a68												*
 *  								Function:			Functions of LL1 Analyse, source code					*
 *	 							CreateTime:			2020/10/08												*
-* 								LastUpdateTime:		2020/10/09												*
+* 								LastUpdateTime:		2020/10/13												*
 * 																											*
 *************************************************************************************************************/
 
@@ -22,7 +22,7 @@
 #define pushStack(i) AnalyseStack.push_back(i)
 
 CheckLL1class::CheckLL1class() {
-	//AnalyseSheet['E']['i'] = "TG";	//转换表
+	//AnalyseSheet['E']['i'] = "TG";	//转换表，忽略FIRST，FOLLOW集可直接参与运算。
 	//AnalyseSheet['E']['('] = "TG";
 	//AnalyseSheet['G']['+'] = "+TG";
 	//AnalyseSheet['G']['-'] = "-TG";
@@ -137,20 +137,14 @@ int CheckLL1class::DoCheck() {
 		else {
 			thechar = '#';
 		}
-			
-		
+
 		if (getStackTop == thechar) {
 			outStack;
-			iterator_pointer++;
-			
+			iterator_pointer++;		
 			outputbystep(" ","GETNEXT(I)");
-			
-			//mixoutput()
 		}
 		else if (replaceStacktop(getStackTop, thechar) == true) {
 			outputbystep(Grammaroutput, Grammarrightsentence);
-			/*error = true;
-			break;*/
 		}
 		else {
 			MessageBox(NULL, NULL, NULL, NULL);
@@ -163,14 +157,6 @@ int CheckLL1class::DoCheck() {
 	return 0;
 }
 
-
-void CheckLL1class::addVIWtoVIWWindows() {
-	
-
-}
-
-
-#include <atlstr.h>
 TCHAR* CheckLL1class::toTCHAR(std::string input) {
 	if (input == "") {
 		output[0] = '\0';
@@ -189,6 +175,132 @@ TCHAR* CheckLL1class::toTCHAR(int input) {
 	_itot_s(input, output, 10);
 	return output;
 }
+
+/******************************************************************************
+*				函数名：		outputFirstSet
+*				函数功能：	向绑定的First输出列表框输出结果
+*				传入参数：	void
+*				传出参数：	void
+*******************************************************************************/
+void CheckLL1class::outputFirstSet() {
+	LV_ITEM lv;
+	lv.mask = LVIF_TEXT;
+	lv.iItem = 0;
+	lv.iImage = 0;
+	std::string tmp;
+	for (auto i = FIRSTset.begin(); i != FIRSTset.end(); i++) {
+		lv.iSubItem = 0;
+
+		tmp = "FIRST(";
+		tmp += i->first;
+		tmp += ")";
+
+		lv.pszText = toTCHAR(tmp);
+		ListView_InsertItem(FirstSet_Bind_RichTextDialogclass, &lv);
+
+		tmp = "{";
+		auto thelast = i->second.end();
+		thelast--;
+		for (auto ii = i->second.begin(); ii != thelast; ii++) {
+			tmp += *ii;
+			tmp += ",";
+		}
+		tmp += *thelast;
+		tmp += "}";
+
+		lv.iSubItem = 1;
+		lv.pszText = toTCHAR(tmp);
+		ListView_SetItem(FirstSet_Bind_RichTextDialogclass, &lv);
+
+		lv.iItem++;
+	}
+}
+
+/******************************************************************************
+*				函数名：		outputFollowSet
+*				函数功能：	向绑定的Follow输出列表框输出结果
+*				传入参数：	void
+*				传出参数：	void
+*******************************************************************************/
+void CheckLL1class::outputFollowSet() {
+	LV_ITEM lv;
+	lv.mask = LVIF_TEXT;
+	lv.iItem = 0;
+	lv.iImage = 0;
+	std::string tmp;
+	for (auto i = FOLLOWset.begin(); i != FOLLOWset.end(); i++) {
+		lv.iSubItem = 0;
+
+		tmp = "FOLLOW(";
+		tmp += i->first;
+		tmp += ")";
+
+		lv.pszText = toTCHAR(tmp);
+		ListView_InsertItem(FollowSet_Bind_RichTextDialogclass, &lv);
+
+		tmp = "{";
+		auto thelast = i->second.end();
+		thelast--;
+		for (auto ii = i->second.begin(); ii != thelast; ii++) {
+			tmp += *ii;
+			tmp += ",";
+		}
+		tmp += *thelast;
+		tmp += "}";
+
+		lv.iSubItem = 1;
+		lv.pszText = toTCHAR(tmp);
+		ListView_SetItem(FollowSet_Bind_RichTextDialogclass, &lv);
+
+		lv.iItem++;
+	}
+}
+
+
+/******************************************************************************
+*				函数名：		outputStatusSheet
+*				函数功能：	向绑定的状态转换表输出列表框输出结果
+*				传入参数：	void
+*				传出参数：	void
+*******************************************************************************/
+void CheckLL1class::outputStatusSheet() {
+	LV_ITEM lv;
+	lv.mask = LVIF_TEXT;
+	lv.iItem = 0;
+	lv.iImage = 0;
+
+	for (auto i = AnalyseSheet.begin(); i != AnalyseSheet.end(); i++) {
+		lv.iSubItem = 0;
+
+		lv.pszText = toTCHAR(std::string{ i->first });
+		ListView_InsertItem(StatusSheet_Bind_RichTextDialogclass, &lv);
+
+		lv.iSubItem++;
+		for (auto ii = SymbolSet.begin(); ii != SymbolSet.end(); ii++) {
+			
+			if (i->second.find(*ii) != i->second.end()) {
+				lstrcpy(tmptchar, toTCHAR(std::string{ i->first }));
+				lstrcat(tmptchar, equaldivision);
+				
+				if(i->second.find(*ii)->second!="")
+					lstrcat(tmptchar, toTCHAR(std::string{ i->second.find(*ii)->second }));
+				else
+					lstrcat(tmptchar, nulldivision);
+			}
+			else {
+				lstrcpy(tmptchar, toTCHAR(std::string{ ' ' }));
+			}
+			
+			lv.pszText = tmptchar;
+			ListView_SetItem(StatusSheet_Bind_RichTextDialogclass, &lv);
+
+			lv.iSubItem++;
+		}
+
+		lv.iItem++;
+	}
+}
+
 /******************************************************************************
 *				函数名：		mixoutput
 *				函数功能：	向绑定的输出列表框输出一行结果
@@ -199,7 +311,6 @@ TCHAR* CheckLL1class::toTCHAR(int input) {
 *				传出参数：	void
 *******************************************************************************/
 void CheckLL1class::mixoutput() {
-	
 	LV_ITEM lv;
 	lv.mask = LVIF_TEXT;
 	lv.iSubItem = 0;
@@ -222,8 +333,6 @@ void CheckLL1class::mixoutput() {
 		ListView_SetItem(Output_Bind_RichTextDialogclass, &lv);
 	}
 
-	//lv.iItem = nIndex + 1;
-
 	lv.iSubItem = 3;
 	lv.pszText = GrammarFormulaoutput;
 	if (lv.iItem >= 0) {
@@ -241,12 +350,10 @@ void CheckLL1class::mixoutput() {
 void CheckLL1class::outputbystep(std::string formformula, std::string action) {
 	memset(stackoutput, '\0', sizeof(stackoutput));
 	memset(restoutput, '\0', sizeof(restoutput));
-	//memset(GrammarFormulaoutput, '\0', sizeof(Grammaroutput));
 	memset(actionoutput, '\0', sizeof(actionoutput));
 
 	stringoutput = "";
 
-	//stackoutput = AnalyseStack.begin
 	for (auto i_iter = AnalyseStack.begin(); i_iter != AnalyseStack.end(); i_iter++) {
 		stringoutput += *i_iter;
 	}
@@ -264,18 +371,12 @@ void CheckLL1class::outputbystep(std::string formformula, std::string action) {
 		}
 	}
 	lstrcpy(restoutput, toTCHAR(stringoutput));
-
-	//GrammarFormulaoutput;
-	//lstrcpy(GrammarFormulaoutput, toTCHAR(formformula));
 	
-
 	if (action == "inital") {
 		lstrcpy(actionoutput, TEXT("初始化"));
 	}
 	else {
 		lstrcpy(actionoutput, toTCHAR(action));
-		
-		
 	}
 
 	mixoutput();
@@ -310,20 +411,52 @@ void CheckLL1class::BindOutputHWND(HWND Output_RichTextDialogclass)
 }
 
 /******************************************************************************
-*				函数名：		BindVIWHWND
-*				函数功能：	绑定VIW列表框的窗口句柄
-*				传入参数：	VIW_RichTextDialogclass HWND 要绑定的窗口句柄
+*				函数名：		BindoutputFirstSetHWND
+*				函数功能：	绑定FIRST列表框的窗口句柄
+*				传入参数：	Output_RichTextDialogclass HWND 要绑定的窗口句柄
 *				传出参数：	void
 *******************************************************************************/
-void CheckLL1class::BindVIWHWND(HWND viwhwnd) {
-	HWND tmp = viwhwnd;
-	VIW_Bind_RichTextDialogclass = tmp;
+void CheckLL1class::BindoutputFirstSetHWND(HWND Output_RichTextDialogclass){
+	// TODO: Add your implementation code here.
+	HWND tmp = Output_RichTextDialogclass;
+	FirstSet_Bind_RichTextDialogclass = tmp;
 }
 
-void CheckLL1class::getFIRSTsets() {
-	
-	
+/******************************************************************************
+*				函数名：		BindoutputFollowSetHWND
+*				函数功能：	绑定FIRST列表框的窗口句柄
+*				传入参数：	Output_RichTextDialogclass HWND 要绑定的窗口句柄
+*				传出参数：	void
+*******************************************************************************/
+void CheckLL1class::BindoutputFollowSetHWND(HWND Output_RichTextDialogclass) {
+	// TODO: Add your implementation code here.
+	HWND tmp = Output_RichTextDialogclass;
+	FollowSet_Bind_RichTextDialogclass = tmp;
+}
 
+/******************************************************************************
+*				函数名：		BindoutputStatusSheetHWND
+*				函数功能：	绑定FIRST列表框的窗口句柄
+*				传入参数：	Output_RichTextDialogclass HWND 要绑定的窗口句柄
+*				传出参数：	void
+*******************************************************************************/
+void CheckLL1class::BindoutputStatusSheetHWND(HWND Output_RichTextDialogclass) {
+	// TODO: Add your implementation code here.
+	HWND tmp = Output_RichTextDialogclass;
+	StatusSheet_Bind_RichTextDialogclass = tmp;
+
+	for (auto i = AnalyseSheet.begin(); i != AnalyseSheet.end(); i++)
+		for (auto ii = i->second.begin(); ii != i->second.end(); ii++)
+			SymbolSet.insert(ii->first);
+}
+
+/******************************************************************************
+*				函数名：		getFIRSTsets
+*				函数功能：	获取FIRST集
+*				传入参数：	void
+*				传出参数：	void
+*******************************************************************************/
+void CheckLL1class::getFIRSTsets() {
 	std::set<std::string> tmpunbuildsymbol,tmptotalbuildsymbol;
 	
 	for (auto i = GrammarFormula.begin(); i != GrammarFormula.end(); i++) {
@@ -345,8 +478,7 @@ void CheckLL1class::getFIRSTsets() {
 				if (ii->second.at(0) == i->at(0) && tmpunbuildsymbol.find(std::string{ ii->first.at(0) }) != tmpunbuildsymbol.end()) {
 					//shangweikejie
 					issolveable = false;
-				}
-				
+				}		
 			}
 			if (issolveable == true) {
 				for (auto ii = GrammarFormula.begin(); ii != GrammarFormula.end(); ii++) {
@@ -362,16 +494,17 @@ void CheckLL1class::getFIRSTsets() {
 				}			
 			}
 			li = i;
-		}
-
-		
+		}	
 	}
 }
 
+/******************************************************************************
+*				函数名：		getFOLLOWsets
+*				函数功能：	获取FOLLOW集
+*				传入参数：	void
+*				传出参数：	void
+*******************************************************************************/
 void CheckLL1class::getFOLLOWsets() {
-	
-
-	//FOLLOWset[GrammarFormula.begin()->second.at(0)].insert('#');
 
 	std::set<std::string> tmptotalbuildsymbol;
 
@@ -392,9 +525,7 @@ void CheckLL1class::getFOLLOWsets() {
 				else
 					FOLLOWset[*(t+1)].insert(*t);
 				FOLLOWset[*(t + 1)].erase(NULLCHARACTER);
-			}
-				
-				
+			}	
 		}
 	}
 
@@ -410,7 +541,6 @@ void CheckLL1class::getFOLLOWsets() {
 			else {
 				break;
 			}
-				
 		}
 	}
 
@@ -442,9 +572,66 @@ void CheckLL1class::getFOLLOWsets() {
 			}
 		}
 	}
-	
 }
 
+/******************************************************************************
+*				函数名：		getStatusSheet
+*				函数功能：	获取状态转换表
+*				传入参数：	void
+*				传出参数：	void
+*******************************************************************************/
+void CheckLL1class::getStatusSheet() {
+	for (auto i = FIRSTset.begin(); i != FIRSTset.end(); i++) {
+		for (auto ii = i->second.begin(); ii != i->second.end(); ii++) {
+			if (*ii != NULLCHARACTER) {
+				int sum = 0;
+				std::string possibleresult1 = "", possibleresult2 = "";
+				for (auto i_tmp = GrammarFormula.begin(); i_tmp != GrammarFormula.end(); i_tmp++) {
+					if (i_tmp->second.at(0) == i->first) {
+						sum++;
+						possibleresult1 = i_tmp->first;
+					}
+					if (i_tmp->second.at(0) == i->first && i_tmp->first.at(0) == *ii) {
+						possibleresult2 = i_tmp->first;
+					}
+				}
+
+				if (possibleresult2 != "")
+					AnalyseSheet[i->first][*ii] = possibleresult2;
+				else if (sum != 0 && possibleresult1 != "") {
+					AnalyseSheet[i->first][*ii] = possibleresult1;
+				}
+				else {
+					MessageBox(NULL, NULL, NULL, NULL);
+				}
+			}
+			else {
+				for (auto tmper = FOLLOWset[i->first].begin(); tmper != FOLLOWset[i->first].end(); tmper++) {
+					AnalyseSheet[i->first][*tmper] = "";
+				}
+				//int sum = 0;
+				//std::string possibleresult1 = "", possibleresult2 = "";
+				//for (auto i_tmp = GrammarFormula.begin(); i_tmp != GrammarFormula.end(); i_tmp++) {
+				//	if (i_tmp->second.at(0) == i->first) {
+				//		sum++;
+				//		possibleresult1 = "";
+				//	}
+				//	if (*i_tmp->first.rbegin() == *ii) {
+				//		possibleresult2 = "";
+				//	}
+				//}
+				//AnalyseSheet[i->first][*ii] = "";
+			}
+		}
+	}
+}
+
+/******************************************************************************
+*				函数名：		buildAnalyseSheet
+*				函数功能：	将输入文法转换为状态转换表
+*				传入参数：	input	std::string		输入的文法内容
+*				传出参数：	void
+*******************************************************************************/
 void CheckLL1class::buildAnalyseSheet(std::string input) {
 	std::string tmp = input;
 	FIRSTset.clear();
@@ -466,7 +653,6 @@ void CheckLL1class::buildAnalyseSheet(std::string input) {
 		else if(*i == '-' && *(i+1) == '>' && flag==1){
 			i++;
 			flag = 2;
-
 		}
 		else if (*i == '|' && flag == 2) {
 			//GrammarFormula[tmptail] = tmpheader;
@@ -485,55 +671,7 @@ void CheckLL1class::buildAnalyseSheet(std::string input) {
 
 	getFIRSTsets();
 	getFOLLOWsets();
-
-
-	for (auto i = FIRSTset.begin(); i != FIRSTset.end(); i++) {
-		for (auto ii = i->second.begin(); ii != i->second.end(); ii++) {
-			if (*ii != NULLCHARACTER) {
-				int sum = 0;
-				std::string possibleresult1="", possibleresult2="";
-				for (auto i_tmp = GrammarFormula.begin(); i_tmp != GrammarFormula.end(); i_tmp++) {
-					if (i_tmp->second.at(0) == i->first) {
-						sum++;
-						possibleresult1 = i_tmp->first;
-					}
-					if (i_tmp->second.at(0) == i->first && i_tmp->first.at(0) == *ii) {
-						possibleresult2 = i_tmp->first;
-					}
-				}
-				
-				if (possibleresult2 != "")
-					AnalyseSheet[i->first][*ii] = possibleresult2;
-				else if (sum != 0 && possibleresult1 != "") {
-					AnalyseSheet[i->first][*ii] = possibleresult1;
-				}
-				else {
-					MessageBox(NULL, NULL, NULL, NULL);
-				}
-			}			
-			else {
-				for (auto tmper = FOLLOWset[i->first].begin(); tmper != FOLLOWset[i->first].end(); tmper++) {
-					AnalyseSheet[i->first][*tmper] = "";
-				}
-				//int sum = 0;
-				//std::string possibleresult1 = "", possibleresult2 = "";
-				//for (auto i_tmp = GrammarFormula.begin(); i_tmp != GrammarFormula.end(); i_tmp++) {
-				//	if (i_tmp->second.at(0) == i->first) {
-				//		sum++;
-				//		possibleresult1 = "";
-				//	}
-				//	if (*i_tmp->first.rbegin() == *ii) {
-				//		possibleresult2 = "";
-				//	}
-				//}
-				
-				//AnalyseSheet[i->first][*ii] = "";
-
-			}
-				
-		}
-		
-	}
-
+	getStatusSheet();
+	
 	GrammarFormula.erase("$");
 }
