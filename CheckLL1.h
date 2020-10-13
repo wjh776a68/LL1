@@ -20,6 +20,12 @@
 #include<map>
 #include<set>
 
+//ChecktoEraseRecursion() 返回值结构体
+struct ChecktoEraseRecursion_result {								
+	bool isNeedToTransfer;															//isNeedToTransfer表示是否含左递归
+	std::multimap<std::string, std::string> CheckGrammarFormula;					//CheckGrammarFormula为消去左递归后的文法
+};
+
 class CheckLL1class {
 public:
 	CheckLL1class();																//构造函数
@@ -27,6 +33,7 @@ public:
 
 	void buildAnalyseSheet(std::string input);
 	int DoCheck();
+
 	void BindInputHWND(HWND Input_RichTextDialogclass);
 	void BindoutputFirstSetHWND(HWND Output_RichTextDialogclass);
 	void BindoutputFollowSetHWND(HWND Output_RichTextDialogclass);
@@ -40,12 +47,13 @@ public:
 	TCHAR* toTCHAR(std::string input);
 	TCHAR* toTCHAR(int input);
 
+	std::set<char> VnSet;			//非终结符集合
 	std::set<char> SymbolSet;		//终结符集合
 private:
 	void outputbystep(std::string formformula,std::string action);
 
+	ChecktoEraseRecursion_result ChecktoEraseRecursion();
 
-	std::string findWholeString(char input);
 	void getFIRSTsets();
 	void getFOLLOWsets();
 	void getStatusSheet();
@@ -65,6 +73,7 @@ private:
 	TCHAR				output[MAXLEN] = { 0 };
 	TCHAR				tmptchar[MAXLEN] = { 0 };
 
+	char				mostcharacter;											//最高非终结符
 	std::string			stringoutput;
 	TCHAR				newline[10] = TEXT("\r\n");								//换行TCHAR*字符串
 
@@ -90,6 +99,7 @@ private:
 	std::deque<char>	AnalyseStack;
 	std::map<char, std::map<char, std::string>> AnalyseSheet;
 	std::multimap<std::string, std::string> GrammarFormula;
+
 
 	std::map<char, std::set<char>> FIRSTset;
 	std::map<char, std::set<char>> FOLLOWset;

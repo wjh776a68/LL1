@@ -6,3 +6,13 @@ S->*FS|/FS
 S->$
 F->(E)
 F->i
+
+
+S->Qc|c
+Q->Rb|b
+R->Sa|a
+
+A->aB
+A->Bb
+B->Ac
+B->d

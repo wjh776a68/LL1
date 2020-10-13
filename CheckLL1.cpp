@@ -99,13 +99,7 @@ bool::CheckLL1class::replaceStacktop(char arg1, char arg2) {
 	return found;
 }
 
-std::string CheckLL1class::findWholeString(char input) {
-	for (auto i_iter = GrammarFormula.begin(); i_iter != GrammarFormula.end(); i_iter++) {
-		if (i_iter->first.at(0) == input) {
-			return i_iter->second + i_iter->first;
-		}
-	}
-}
+
 
 int CheckLL1class::DoCheck() {
 	
@@ -114,7 +108,7 @@ int CheckLL1class::DoCheck() {
 	nIndex = -1;
 	totalLength = Input_Bind_RichTextDialogclass.RichTextDialog_GetLength();
 	iterator_pointer = 0;
-
+	AnalyseStack.clear();
 	Analysestep = -1;
 	//outputbystep(" ", "初始化");
 
@@ -130,6 +124,15 @@ int CheckLL1class::DoCheck() {
 
 	char thechar;
 	while (iterator_pointer <= totalLength && error==false) {
+		auto getStackSecond = AnalyseStack.rbegin();
+		getStackSecond++;
+		if (getStackSecond == AnalyseStack.rend()) {
+			;
+		}
+		if (getStackTop == '#') {
+			return 0;
+		}
+
 		if (iterator_pointer < totalLength) {
 			Input_Bind_RichTextDialogclass.RichTextDialog_GetChar(iterator_pointer);
 			thechar = getStringTop;
@@ -147,8 +150,9 @@ int CheckLL1class::DoCheck() {
 			outputbystep(Grammaroutput, Grammarrightsentence);
 		}
 		else {
-			MessageBox(NULL, NULL, NULL, NULL);
+			MessageBoxW(NULL, TEXT("LL（1）文法分析失败"), TEXT("该句子不属于该文法！"), NULL);
 			error = true;
+			return -1;
 		}
 		nIndex++;
 	}
@@ -602,7 +606,9 @@ void CheckLL1class::getStatusSheet() {
 					AnalyseSheet[i->first][*ii] = possibleresult1;
 				}
 				else {
-					MessageBox(NULL, NULL, NULL, NULL);
+					MessageBoxW(NULL, TEXT("LL（1）文法分析失败"), TEXT("获取状态转换表时出现错误！"), NULL);
+					return;
+					//MessageBox(NULL, NULL, NULL, NULL);
 				}
 			}
 			else {
@@ -626,6 +632,112 @@ void CheckLL1class::getStatusSheet() {
 	}
 }
 
+
+/******************************************************************************
+*				函数名：		ChecktoEraseRecursion
+*				函数功能：	计算是否文法含有直间接左递归，并得出消去左递归后的文法
+*				传入参数：	void
+*				传出参数：	result	ChecktoEraseRecursion_result
+*******************************************************************************/
+ChecktoEraseRecursion_result CheckLL1class::ChecktoEraseRecursion() {
+	ChecktoEraseRecursion_result result;
+																//非终结符集合
+	std::map<std::string, std::string> CheckGrammarFormula;
+	int stepcounter = 4000;
+	result.isNeedToTransfer = false;
+	result.CheckGrammarFormula.clear();
+
+	CheckGrammarFormula.insert(GrammarFormula.begin(), GrammarFormula.end());
+
+	bool record = 1;
+	for (auto i = CheckGrammarFormula.begin(); i != CheckGrammarFormula.end(); i++) {
+		VnSet.insert(i->second.at(0));
+	}
+	//auto mosti = VnSet.rend();																//最高终结符
+	//mosti--;
+	for (auto i = VnSet.rbegin(); i != VnSet.rend()/*mosti*/; i++) {										//按顺序排列非终结符，并指定一非终结符，消去其余非终结符，从而观察是否含有左递归
+		if (*i == mostcharacter)
+			continue;
+
+		for (auto ii = CheckGrammarFormula.begin(); ii != CheckGrammarFormula.end() && stepcounter>0; ii++, stepcounter--) {
+			std::string tmp="";
+			int catchpos=(int)ii->first.find(*i);
+			if (catchpos >= 0) {
+				for (auto formulaofi = CheckGrammarFormula.begin(); formulaofi != CheckGrammarFormula.end() && stepcounter>0; stepcounter--) {
+					
+					if (formulaofi->second.at(0) == *i) {
+						tmp = ii->first.substr(0, catchpos);
+						tmp += formulaofi->first;
+						tmp += ii->first.substr((int)catchpos + 1, tmp.length());
+						CheckGrammarFormula.insert(std::make_pair(tmp,ii->second));
+
+						//auto oldformulaofi = formulaofi;			//临时变量，要消除的变量
+						formulaofi++;
+						//CheckGrammarFormula.erase(oldformulaofi);
+					}
+					else {
+						formulaofi++;
+					}
+				}
+			}
+		}
+	}
+
+	if (stepcounter <= 0) {
+		return result;
+	}
+
+	auto i = VnSet.rbegin();
+	for (; i != VnSet.rend()/*mosti*/; i++) {
+		if (*i == mostcharacter)
+			continue;
+
+		for (auto ii = CheckGrammarFormula.begin(); ii != CheckGrammarFormula.end();) {	//删除含其他符号的多余表达式
+			int thepos =ii->first.find(*i);
+			if (thepos >= 0 || ii->second.at(0)==*i) {
+				auto oldii = ii;
+				ii++;
+				CheckGrammarFormula.erase(oldii);
+			}
+			else {
+				ii++;
+			}
+		}
+	}
+
+	char newchar;																					//新增的非终结符
+	for (newchar = 'A'; newchar <= 'Z'; newchar++) {
+		if (newchar != CheckGrammarFormula.begin()->second.at(0)) {
+			break;
+		}
+	}
+	
+	for (auto i = CheckGrammarFormula.begin(); i != CheckGrammarFormula.end();) {	//查看是否含有左递归
+		if (i->first.at(0) == i->second.at(0)) {
+			result.isNeedToTransfer = true;
+			std::string tmpstring = i->first.substr(1, i->first.length());
+			tmpstring += newchar;
+
+			result.CheckGrammarFormula.insert(std::make_pair(tmpstring, std::string{ newchar }));
+			result.CheckGrammarFormula.insert(std::make_pair(std::string{ NULLCHARACTER }, std::string{ newchar }));
+			auto oldi = i;
+			i++;
+			CheckGrammarFormula.erase(oldi);
+		}
+		else {
+			std::string tmpstring = i->first;
+			tmpstring += newchar;
+			result.CheckGrammarFormula.insert(std::make_pair(tmpstring, i->second));
+			auto oldi = i;
+			i++;
+			CheckGrammarFormula.erase(oldi);
+		}
+
+	}
+
+	return result;
+}
+
 /******************************************************************************
 *				函数名：		buildAnalyseSheet
 *				函数功能：	将输入文法转换为状态转换表
@@ -634,9 +746,12 @@ void CheckLL1class::getStatusSheet() {
 *******************************************************************************/
 void CheckLL1class::buildAnalyseSheet(std::string input) {
 	std::string tmp = input;
+
 	FIRSTset.clear();
 	FOLLOWset.clear();
 	FOLLOWset[input.at(0)].insert('#');
+	mostcharacter = input.at(0);
+
 	std::string tmpheader, tmptail;
 	int flag = 1;	//flag==1 for tmpheader flag==2 for tmptail
 	for (auto i = tmp.begin(); i != tmp.end(); i++) {
@@ -669,9 +784,23 @@ void CheckLL1class::buildAnalyseSheet(std::string input) {
 		GrammarFormula.insert(std::make_pair(tmptail, tmpheader)); 
 		//GrammarFormula[tmptail] = tmpheader;
 
+	auto returnvalue=ChecktoEraseRecursion();
+	if (returnvalue.isNeedToTransfer == true) {
+		GrammarFormula.clear();
+		GrammarFormula.insert(returnvalue.CheckGrammarFormula.begin(), returnvalue.CheckGrammarFormula.end());
+
+		Input_Bind_RichTextDialogclass.RichTextDialog_ClearText();
+
+		std::string tmpoutput = "";
+		for (auto tmpi = GrammarFormula.begin(); tmpi != GrammarFormula.end(); tmpi++) {
+			tmpoutput += tmpi->second + "->" + tmpi->first + "\r\n";
+		}
+		Input_Bind_RichTextDialogclass.RichTextDialog_SetText(toTCHAR(tmpoutput));
+	}
+
 	getFIRSTsets();
 	getFOLLOWsets();
 	getStatusSheet();
 	
-	GrammarFormula.erase("$");
+	GrammarFormula.erase(std::string{ NULLCHARACTER});
 }

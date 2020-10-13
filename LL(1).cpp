@@ -327,6 +327,9 @@ int createwidgets(HWND hWnd) {
 void StartLL1Windows(HWND mainwindows_hWnd) {
     PWINDOWINFO tmp = (PWINDOWINFO)malloc(sizeof(WINDOWINFO));
     tmp->cbSize = sizeof(WINDOWINFO);
+    DestroyWindow(hwndList_FirstSet);
+    DestroyWindow(hwndList_FollowSet);
+    DestroyWindow(hwndList_StatusSheet);
     if (GetWindowInfo(hwndList, tmp) == TRUE) {
         ShowWindow(hwndList, SW_SHOWNORMAL);
         UpdateWindow(hwndList);
@@ -341,6 +344,9 @@ void StartLL1Windows(HWND mainwindows_hWnd) {
 void StartFirstSetWindow(HWND mainwindows_hWnd) {
     PWINDOWINFO tmp = (PWINDOWINFO)malloc(sizeof(WINDOWINFO));
     tmp->cbSize = sizeof(WINDOWINFO);
+    DestroyWindow(hwndList);
+    DestroyWindow(hwndList_FollowSet);
+    DestroyWindow(hwndList_StatusSheet);
     if (GetWindowInfo(hwndList_FirstSet, tmp) == TRUE) {
         ShowWindow(hwndList_FirstSet, SW_SHOWNORMAL);
         UpdateWindow(hwndList_FirstSet);
@@ -355,6 +361,9 @@ void StartFirstSetWindow(HWND mainwindows_hWnd) {
 void StartFollowSetWindow(HWND mainwindows_hWnd) {
     PWINDOWINFO tmp = (PWINDOWINFO)malloc(sizeof(WINDOWINFO));
     tmp->cbSize = sizeof(WINDOWINFO);
+    DestroyWindow(hwndList);
+    DestroyWindow(hwndList_FirstSet);
+    DestroyWindow(hwndList_StatusSheet);
     if (GetWindowInfo(hwndList_FollowSet, tmp) == TRUE) {
         ShowWindow(hwndList_FollowSet, SW_SHOWNORMAL);
         UpdateWindow(hwndList_FollowSet);
@@ -369,6 +378,9 @@ void StartFollowSetWindow(HWND mainwindows_hWnd) {
 void StartStatusSheetWindow(HWND mainwindows_hWnd) {
     PWINDOWINFO tmp = (PWINDOWINFO)malloc(sizeof(WINDOWINFO));
     tmp->cbSize = sizeof(WINDOWINFO);
+    DestroyWindow(hwndList);
+    DestroyWindow(hwndList_FirstSet);
+    DestroyWindow(hwndList_FollowSet);
     if (GetWindowInfo(hwndList_StatusSheet, tmp) == TRUE) {
         ShowWindow(hwndList_StatusSheet, SW_SHOWNORMAL);
         UpdateWindow(hwndList_StatusSheet);
